@@ -1,0 +1,487 @@
+
+
+<html>
+<head>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        function mostrar(id) {
+            if (id == "in") {
+                $("#in").show();
+                $("#out").hide();
+                $("#main").hide();
+            }
+            if (id == "out") {
+                $("#in").hide();
+                $("#out").show();
+                $("#main").hide();
+            }
+
+        }
+    </script>
+    <meta charset="UTF-8">
+<title>CBCH - Ingreso/Egreso</title>
+</head>
+
+<link rel="stylesheet" href="dist/kioskboard-1.4.0.min.css" /><script src="dist/kioskboard-1.4.0.min.js"></script>
+
+	<Script>
+KioskBoard.Init({
+	keysArrayOfObjects: null,
+	keysJsonUrl: null,
+	specialCharactersObject: null,
+	language: 'en', // Language Code (ISO 639-1) for custom keys (for language support) => e.g. "en" || "tr" || "es" || "de" || "fr" etc.
+	theme: 'light', // The theme of keyboard => "light" || "dark" || "flat" || "material" || "oldschool"
+	capsLockActive: true, // Uppercase or lowercase to start. Uppercase when "true"
+	allowRealKeyboard: false, // Allow or prevent real/physical keyboard usage. Prevented when "false"
+	cssAnimations: true, // CSS animations for opening or closing the keyboard
+	cssAnimationsDuration: 360, // CSS animations duration as millisecond
+	cssAnimationsStyle: 'slide', // CSS animations style for opening or closing the keyboard => "slide" || "fade"
+	keysAllowSpacebar: true, // Allow or deny Spacebar on the keyboard. The keyboard is denied when "false"
+	keysSpacebarText: 'Space', // Text of the space key (spacebar). Without text => " "
+	keysFontFamily: 'sans-serif', // Font family of the keys
+	keysFontSize: '22px', // Font size of the keys
+	keysFontWeight: 'normal', // Font weight of the keys
+	keysIconSize: '25px', // Size of the icon keys
+	KioskBoard.Run('.js-kioskboard-input');
+	</script>
+
+<style type="text/css" media="screen">
+.botonIN {
+border: 1px solid #2e518b; /*anchura, estilo y color borde*/
+padding: 10px; /*espacio alrededor texto*/
+background-color: #2E9B2F; /*color botón*/
+color: #ffffff; /*color texto*/
+text-decoration: none; /*decoración texto*/
+text-transform: uppercase; /*capitalización texto*/
+font-family: 'Helvetica', sans-serif; /*tipografía texto*/
+border-radius: 50px; /*bordes redondos*/
+}
+	</style>
+
+<style>	
+.botonOUT {
+border: 1px solid #2e518b; /*anchura, estilo y color borde*/
+padding: 10px; /*espacio alrededor texto*/
+background-color: #C0080B; /*color botón*/
+color: #ffffff; /*color texto*/
+text-decoration: none; /*decoración texto*/
+text-transform: uppercase; /*capitalización texto*/
+font-family: 'Helvetica', sans-serif; /*tipografía texto*/
+border-radius: 50px; /*bordes redondos*/
+}
+	
+	</style>
+<?php
+
+session_start();
+include ('compania.php');
+include('../header.php');
+if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
+    header("location: ../login.php");
+
+}
+
+
+
+$user = "SELECT compania FROM Users where username='$_SESSION[username]'";
+if ($resuser = $conn->query($user)) {
+    while ($ruser = $resuser->fetch_assoc()) {
+        $usrcia = $ruser['compania'];
+    }
+}
+
+
+
+if(!isset($_SESSION["nivel"]) || ($_SESSION["nivel"] === 1 AND $usrcia != $compania)) {
+    echo '<script> alert("Tu usuario no cuenta con el permiso para acceder a esta página");window.location = "../index.php" </script>';
+    exit;
+}
+
+if(!isset($_SESSION["nivel"]) || (($_SESSION["nivel"] >= 2) OR ($_SESSION["nivel"] = 1 AND $usrcia = $compania) )) {
+
+
+        $estados = $conn -> query ('SELECT * FROM estados ORDER BY id ASC');
+
+        echo'
+
+<br><br>
+
+<div id="in" style="display: none;">
+    <p style="color: #2e518b; font-size: large;" align="center">Registro de <b><u>INGRESO</u></b></p>
+    <form action="Registro.php" method="post">
+
+            <table>
+                <tr>
+                    <td><h3 style="color: #005cbf"><b>RUT</b></h3> </td>
+                    <td><h3><input name="rut"  type="value" class="epigrafes" id="rut" size="15" maxlength="8"> - <input name="dv"  type="value" class="epigrafes" id="dv" maxlength="1" size="1"></h3></td>
+                </tr>
+           
+  <tr>
+    <td> <label><b>Temperatura:</b></label></td>
+	<td><input size=8 type="value" class="js-kioskboard-input" data-kioskboard-type="numpad" placeholder="Temp" name="temperatura" id="temperatura"></td>
+  <td width="789"> <label>Especifique la temperatura utilizando un "." (punto). No utilizar &quot;,&quot; (coma) como separador</label></td>
+	 </tr>
+     <tr style="height: 10px"></tr>
+            <tr>
+     <td> <label><b>Estado:</b></label></td>
+                <td><p align="left">
+                        <select  name="estado" id="estado">
+	                    <label="Seleccione"></label>';
+                        while ($valores = mysqli_fetch_array($estados)) {
+                        echo '<option value="' . $valores["estado"] . '">' . $valores["estado"] . '</option>';
+                        }
+                        echo'
+             </select>
+           
+         </p></td>
+     </tr>
+     <tr style="height: 30px"></tr>';
+  ?>
+
+     <tr>
+         <td colspan="4" align="Left" style="color: red"> <b><u>  Declaración de Síntomas en las últimas 24hs </u></b></td>
+     </tr><tr>
+         <td colspan="4">
+             <input type="checkbox" name="ninguno" id="ninguno" value="X">Ninguno</input><br>
+             <input type="checkbox" name="fiebre" id="fiebre" value="X" onclick="myFunction1()">Fiebre (>37,5°C)</input><br>
+             <input type="checkbox" name="olfato" id="olfato" value="X" onclick="myFunction2()">Pérdida total/parcial de Olfato</input><br>
+             <input type="checkbox" name="gusto" id="gusto" value="X" onclick="myFunction3()">Pérdida total/parcial de Gusto</input><br>
+             <input type="checkbox" name="tos" id="tos" value="X" onclick="myFunction4()">Tos</input><br>
+             <input type="checkbox" name="congestion" id="congestion" value="X" onclick="myFunction5()">Congestión nasal</input><br>
+             <input type="checkbox" name="taquipnea" id="taquipnea" value="X" onclick="myFunction6()">Taquipnea (respiración agitada)</input><br>
+             <input type="checkbox" name="dolor_garganta" id="dolor_garganta" value="X" onclick="myFunction7()">Dolor de garganta</input><br>
+             <input type="checkbox" name="dolor_muscular" id="dolor_muscular" value="X" onclick="myFunction8()">Dolor muscular</input><br>
+             <input type="checkbox" name="fatiga" id="fatiga" value="X" onclick="myFunction9()">Fatiga</input><br>
+             <input type="checkbox" name="dolor_pecho" id="dolor_pecho" value="X" onclick="myFunction10()">Dolor de Pecho</input><br>
+             <input type="checkbox" name="diarrea" id="diarrea" value="X" onclick="myFunction11()">Diarrea</input><br>
+             <input type="checkbox" name="apetito" id="apetito" value="X" onclick="myFunction12()">Pérdida de apetito, náuseas, vómitos</input><br>
+             <input type="checkbox" name="dolor_cabeza" id="dolor_cabeza" value="X" onclick="myFunction13()">Dolor de cabeza</input><br><br>
+         </td>
+         <tr><td colspan="4">
+             <input type="checkbox" name="ddjj" id="ddjj" value="X">En caso de comprobarse falsedad en la declaración de la causal invocada, para requerir el presente documento, se incurrirá en las penas del artículo 210 del Código Penal y del órden del dia Nº012-2021</tr>
+    <script>
+        $('#ddjj').click(function(){
+     //If the checkbox is checked.
+     if($(this).is(':checked')){
+     //Enable the submit button.
+     $('#ingreso').attr("disabled", false);
+     } else{
+     //If it is not checked, disable the button.
+     $('#ingreso').attr("disabled", true);
+     }
+        });   </script>
+
+     </td></tr>
+
+     </tr>
+ </table>
+	<br><br>
+<input type="submit" id="ingreso" name="ingreso" value="INGRESO" class="botonIN" formaction="#ingreso" disabled>
+<input type="submit" name="regresar" value="REGRESAR" class="botonOUT" formaction="index.php">
+  </p>
+
+</form>
+
+    <p id="unauthorized" style="color:red; display:none"><b><u>INGRESO NO AUTORIZADO</u></b> por manifestar síntomas que requieren aislamiento preventivo. El ingreso debe ser autorizado por una autoridad del cuerpo. Dicha autorización deberá ser solicitada POR ESCRITO. </p>
+    <script>
+        function myFunction1() {
+            var checkBox = document.getElementById("fiebre");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                //text.style.display = "block";
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction2() {
+            var checkBox = document.getElementById("olfato");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction3() {
+            var checkBox = document.getElementById("gusto");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction4() {
+            var checkBox = document.getElementById("tos");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction5() {
+            var checkBox = document.getElementById("congestion");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction6() {
+            var checkBox = document.getElementById("taquipnea");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction7() {
+            var checkBox = document.getElementById("dolor_garganta");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction8() {
+            var checkBox = document.getElementById("dolor_muscular");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction9() {
+            var checkBox = document.getElementById("fatiga");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction10() {
+            var checkBox = document.getElementById("dolor_pecho");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction11() {
+            var checkBox = document.getElementById("diarrea");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction12() {
+            var checkBox = document.getElementById("apetito");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+    <script>
+        function myFunction13() {
+            var checkBox = document.getElementById("dolor_cabeza");
+            var text = document.getElementById("unauthorized");
+            if (checkBox.checked == true){
+                text.style.display = "block";
+            } else {
+                text.style.display = "none";
+            }
+        }
+    </script>
+</div>
+
+<div id="out" style="display: none;">
+    <p style="color: #2e518b; font-size: large;" align="center">Registro de <b><u>EGRESO</u></b></p>
+    <form action="Registro.php" method="post">
+
+        <table>
+            <tr>
+                <td><h3 style="color: #005cbf"><b>RUT</b></h3> </td>
+                <td><h3><input name="rut"  type="value" class="epigrafes" id="rut" size="15" maxlength="8"> - <input name="dv"  type="value" class="epigrafes" id="dv" maxlength="1" size="1"></h3></td>
+            </tr>
+        </table>
+
+        <?php
+        include('dbconnection.php');
+
+        $estados = $conn -> query ('SELECT * FROM estados ORDER BY id ASC');
+    echo'
+        <table>
+            <tr>
+                <td> <h3><label><b>Estado:</b></label></h3></td>
+                <td><p align="left">
+                        <select  name="estado" id=“estado">
+	                    <label="Seleccione">
+	                      		<option selected="selected">No Disponible</option>
+';
+                        while ($valores = mysqli_fetch_array($estados)) {
+                      echo '<option value="' . $valores["estado"] . '">' . $valores["estado"] . '</option>';
+                        }
+                        echo'
+                    </p><br></td>
+            </tr><tr></tr>
+            </tr>
+        </table>';
+?>
+        <br><br>
+        <input type="submit" id="egreso" name="egreso" value="EGRESO" class="botonIN" formaction="#egreso">
+        <input type="submit" name="regresar" value="REGRESAR" class="botonOUT" formaction="index.php">
+        </p>
+
+    </form>
+</div>
+
+<div id="main">
+<form action="Registro.php" method="post">
+    Estado actual:
+    <select id="status" name="status" onchange="mostrar(this.value);">
+        <option value="" selected disabled hidden>Seleccione</option>
+        <option value="in">Ingreso</option>
+        <option value="out">Egreso</option>
+    </select>
+</form>
+</div>
+
+
+
+
+
+ <?php
+ #ini_set('display_errors', 0);
+  #ini_set('display_startup_errors', 1);
+ #error_reporting(E_ALL);
+include('dbconnection.php');
+
+if (isset($_POST['ingreso'])) {
+
+    $rut = $_POST['rut'];
+    $temperatura = $_POST['temperatura'];
+    $temperatura = doubleval(str_replace(",", ".", $temperatura));
+    $date = new DateTime("now", new DateTimeZone('America/Santiago'));
+    $ingreso = $date->format('Y-m-d H:i');
+    $estado = $_POST['estado'];
+    $hora_actual = $date->format("H:i");
+    $ninguno = $_POST['ninguno'];
+    $fiebre = $_POST['fiebre'];
+    $olfato = $_POST['olfato'];
+    $gusto = $_POST['gusto'];
+    $tos = $_POST['tos'];
+    $congestion = $_POST['congestion'];
+    $taquipnea = $_POST['taquipnea'];
+    $dolor_garganta = $_POST['dolor_garganta'];
+    $dolor_muscular = $_POST['dolor_muscular'];
+    $fatiga = $_POST['fatiga'];
+    $dolor_pecho = $_POST['dolor_pecho'];
+    $diarrea = $_POST['diarrea'];
+    $apetito = $_POST['apetito'];
+    $dolor_cabeza = $_POST['dolor_cabeza'];
+    $ddjj = $_POST['ddjj'];
+
+    $query = "select * FROM nomina WHERE rut = '$rut'";
+    $lastrow = "select * from registro where rut = '$rut' order by 1 desc limit 1";
+
+    $sql = "INSERT INTO registro (compania, rut, ingreso, estado, temp_ingreso, s_ninguno, s_fiebre, s_olfato, s_gusto, s_tos, s_congestion, s_taquipnea, s_dolor_garganta, s_dolor_muscular, s_fatiga, s_dolor_pecho, s_diarrea, s_apetito, s_dolor_cabeza, s_ddjj, evento) 
+VALUES ('$compania','$rut', '$ingreso', '$estado', '$temperatura', '$ninguno', '$fiebre', '$olfato', '$gusto', '$tos', '$congestion', '$taquipnea', '$dolor_garganta', '$dolor_muscular', '$fatiga', '$dolor_pecho', '$diarrea', '$apetito', '$dolor_cabeza', '$ddjj', 'Ingreso')";
+    if ($res = $conn->query("select * FROM nomina WHERE rut = " . $rut )) {
+        while ($bombero = $res->fetch_assoc()) {
+            $conn->query($sql) or die($conn->error);
+            $changedisponible = "UPDATE registro SET estado = 'No Disponible', evento = 'Egreso', egreso = '$ingreso'  WHERE rut = '$rut' and estado = 'Disponible'";
+            $fuerzasalida = "UPDATE registro SET estado = 'No Disponible', evento = 'Egreso', egreso = '$ingreso' WHERE rut = '$rut' AND evento = 'Ingreso'";
+            $conn->query($fuerzasalida) or die($conn->error);
+            $conn->query($changedisponible) or die($conn->error);
+            $conn->query($sql) or die($conn->error);
+
+            echo '<script> alert("Ingreso de ' . $bombero['nombres'] . ' ' . $bombero['apellido_paterno'] . ' ' . $bombero['apellido_materno'] . ' registrado correctamente a las ' . $hora_actual . '. [Estado:' . $estado . ']"); window.location = "index.php"; </script>';
+        }
+    }
+
+    if ($res = $conn->query("select * FROM nomina WHERE rut = " . $_POST["rut"] . " ")) {
+        if (mysqli_num_rows($res) < 1) {
+            echo '<script> alert("RUT ' . $rut . ' no encontrado. Verifique haberlo escrito coorectamente y vuelva a intentarlo. Si el error persiste contacte al Oficial de Guardia"); window.location = "index.php"; </script>';
+        }
+    }
+}
+/* ---------- EGRESO --------- */
+ if (isset($_POST['egreso'])) {
+     $rut = $_POST["rut"];
+     $date = new DateTime("now", new DateTimeZone('America/Santiago'));
+     $egreso = $date->format('Y-m-d H:i');
+     $estado = $_POST['estado'];
+     $hora_actual = $date->format("H:i");
+     $existe = "select * from Registro_Conductores where Registro_Conductores.rut = '$rut' order by 1 desc limit 1";
+     $esconductor = "Select * from nomina where rut = '$rut' AND conductor = 'Si' ";
+
+     $lastrow = "select * from registro where rut = " . $_POST["rut"] . " AND evento='Ingreso' order by 1 desc limit 1";
+     $sql = "INSERT INTO registro (rut, egreso, evento,estado, temp_salida) VALUES ('$rut', '$egreso', 'Egreso', '$estado', $temperatura)";
+     $query = "select * FROM nomina WHERE rut = " . $_POST["rut"] . " ";
+
+     if ($res = $conn->query("select * FROM nomina WHERE rut = " . $_POST["rut"] . " ")) {
+         if (mysqli_num_rows($res)<1){
+             echo '<script> alert("RUT ' . $rut . ' no encontrado. Verifique haberlo escrito coorectamente y vuelva a intentarlo. Si el error persiste contacte al Oficial de Guardia"); window.location = "index.php"; </script>';
+         }
+         while ($bombero = $res->fetch_assoc()) {
+             if ($result = $conn->query($lastrow)) {
+                 while ($row = $result->fetch_assoc()) {
+                     if ($row["evento"] == 'Ingreso') {
+                         if ($row["ingreso"] != NULL) {
+
+                             $conn->query("UPDATE registro set egreso='" . $egreso . "', estado='" . $estado . "', evento='Egreso' WHERE id=" . $row["id"] . "") or die($conn->error);
+                             echo '<script> alert("Egreso de ' . $bombero['nombres'] . ' ' . $bombero['apellido_paterno'] . ' ' . $bombero['apellido_materno'] . ' registrado OK a las ' . $hora_actual . '. [Estado Externo:' . $estado . ']"); window.location = "index.php"; </script>';
+                         }
+                     }
+                 }
+             }
+             if ($noexiste = $conn->query($lastrow) or die($conn->error)) {
+                 if (mysqli_num_rows($noexiste) < 1) {
+                     echo '<script> alert("No se encontró un registro de ingreso activo para el RUT ' . $rut . ' (' . $bombero['nombres'] . ' ' . $bombero['apellido_paterno'] . ' ' . $bombero['apellido_materno'] . ') Realice su ingreso antes de realizar el egreso. "); window.location = "index.php"; </script>';
+                 }
+             }
+         }
+     }
+ }
+}
+
+
+
+?>
+
+</html>
